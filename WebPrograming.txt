@@ -1,0 +1,548 @@
+Web-programing:
+working with http port ()
+SQL:
+install sql in linux
+command: apt-get mysql -y
+
+for starting work with mysql in terminall linux need to heve role write (root) and install app
+
+you can this just write (suto -i)
+
+syntaxis in mysql next: mysql-uUser-pPassword
+were User its name user and pass its oassword user if dont write user name and pass thet system will use current user
+If locate in (root) that system dont will not say about pass and user name
+command:
+//IS COMMAND
+//show databases : list data bases
+in mysql very importamt using (;) in the end every command
+comand in my sql can contains 1 ore more field, for go in the next field need to click on enter and dont write (;)
+
+// Create Database anyname.
+Foe delt data bsese using command:
+//DROP DATABASE YOURTABLE;
+for starting to work with table database need to go in carticular data base for using command
+//use yourtablename;
+for check table particular data base need to locaite in particular data base write command:
+//show tables;
+
+CRUT
+create 
+read 
+update
+delet
+
+foe create the table using the command 
+//CREATE TABLE TABLENAME
+
+TABLE ITS FIELD TABLE
+//(Name-unique aithentification String PRAMARY KEY,
+//anyValue Varchar(100),
+//anyValue Varchar(100);
+
+for wothch field in table useing the command
+//Describe tablename;
+
+delete table:
+//Drop table tourtablename;
+
+
+for create the field in table that alrede have or cange type field or delete field using command:
+//ALTER TABLE TABLE NAME,
+//ADD any DATA;
+
+for deleting command write:
+//ALTER TABLE YOUTABLE,
+//DROP COLUMN YOURCOLUMB;
+
+if you wont that field dont was empty you can writte:
+ //not null youfield;
+ 
+ for create record insaide table my sql using command insert
+ 
+ //INSERT INTO tablename'
+ //(colundname, columdname, columname) Values
+ //(3,'flout', 12);
+ Is one simple way to check record in table its use the table :
+ // SELECT * from youtable;
+ after this commant we will write colum that we will insert value
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ //Web programing
+ 
+ 
+Command sql
+This command for get collumb value
+* - meen that you wont to grt oll columbe
+//SELECT *FROM TOYRTABLE COHERE LASTNAME = 'VALUE TABLE';
+....
+
+command for change value in ine of columbe value
+
+UPDATE YOUTABLE SET FIERSTNAME  = 'REGHENGE VALUE' WHERE COIUMBENAME = 'VALUE'
+ 
+ 
+ SQL triger its automatecli server logic in moment execututon link with sql operation, Sql truger usles many web platform on exemple (servoce now, Selesfors, SAP) like rule developer web platform thing about new neme for sql triger in service now its name like "Bissnes Rule" 
+ Syntax for sql triger
+ 
+ //CREATE TRIGER  (COLUMBE) BEFORE INSERT ON (YOUTABLE) FOR EACH ROW SET NEW.BIRTHDEY = CURRENT_DATE();
+ 
+
+saving sql procedure: different sql trigger dont will be automecli execute in the time one of operation seving procedure execute manual or grafick
+//CREAT PROOCEDURE KB 322 (IN PIN INT) BEGIN SELECT *FROM STUDENT WHERE ID = PIN;
+
+...
+IF you wont to call procedure you need to write
+//CALL (TABLENAME);
+
+
+JOIN - using unite data from 2 or more table on seems data in particular columbe;
+
+
+Idea contains in that you need to get value from particular columbe and and tranfer in differnt columbe
+
+differnt typr of this join 
+
+LEFT JOIN
+RIGHT GOIN
+
+1F - sql normalithatio its procces organithation data in base method for workaround dublicate data and get acces for data
+narmalithation data base give you oportunity to 
+Have 3 form 1 NF 2 NF 3 NF 
+
+02.04.24
+Web-programing
+
+<> - teg
+
+
+Selector:
+
+teg= <p> </p>
+
+p{
+color:yourcolor;
+}
+
+id = 12;
+
+#12{
+color: yourcolor;
+}
+
+
+class = 12
+.12{
+color.yourcolor
+};
+
+//this will work for all class 
+<p id = 'x' class = 'goodclass'/>
+p.class{
+//you code 
+}
+ 
+ 
+selector atrebute writing in [] 
+
+operator in selector atrebute: 
+
+p{
+background: yellow;
+}
+
+$ - endth with
+
+
+2.hierarhy selector
+
+Element by family
+
+next sister element
+
++ its only one element
+~ using for all element
+
+//3.Pseodo class
+Selector
+hover
+active
+focus
+visited
+first-child
+last-chils
+nth-child()
+nth-of-type()
+:not()
+
+using for selector usong the selector with (.) 
+
+CSS pseudo classes its keyword whath add in sekector and show particulat status element wich can be peik and styling
+
+1hover- using wen cursor mouse lokate above element
+
+2active: using wen element acrivity
+
+3focuse wen element get focuse
+
+4 visitid: using 
+
+5 first-child using first child element
+
+6 last child using for last element on different type
+
+7ntc - child() using by elent bu index element
+
+8 ntc - of - type() using by particular index
+
+Type:
+
+odd
+even
+an+b
+
+Pseydo element: CSS its virtual element wich created for styling particular type different element html
+
+Pseodo element give opartunity to add style for type element dont have in dom
+
+Pseodo element ading with (::) 
+div :: after {counteut:
+
+} 
+
+peckange request using like Client, server
+
+in request give the file
+
+Broser get file and show (site) engin wich tramnsform in html,css,js
+
+DOM - hirarhy teg (document object model)
+
+broser have pre difined engine (rendering engins) wich say about interpritation nd using css on web site this engine anylathe css code, and pick styly wich you will pick on particular css and show context with style
+
+//Exemple engine:
+Web Kit - Safari, old vesion Chrom
+Blink: its form web kit (relation web kit) wich use in new broser chrom or Opera
+Gecko: firefox
+Trident: internetExplorer 
+Engehtml: MicrisoftEnge
+Sevo: experemntaly engine wich create company (mothila) and can using new vesion (firefox)s
+
+with engine you loade all packedge (html,css,js)
+
+V8 - js for create only on js using only (nodejs)
+
+versionth - give the oportunity controle script abd if you wont you can go back to old version script
+
+
+04.04.24
+Web-programing:
+
+Topic:jQuery
+
+jQuery: its fast not big many functionalyti librari in js
+
+Main functionalyti jQuery: the firs maine functionalyti in manipulation DOM 
+2 Process event 
+3Working with Ajax
+4 Animation
+5 Utelits 
+
+
+html DOM (Document Object Model) : its view html document view like thry structer object which give lenguge js get acces by element sitechange structer
+
+html DOM give avery element site like object with propertys
+
+html its parent is XML
+
+html and XML all create with teg and him atrebute
+teg is relation give hierahy
+
+
+step 1 
+CD Desctop
+CD Documents
+
+git clone
+
+url:
+
+after open file in broser and write code in console
+
+
+work with DOM withaut using jQuery history was fierst and working with clear js 
+
+var loop = document.
+
+for(var i=0; i < loop.length; +i){
+console.log(loop[i])
+
+
+need to sat that nat only object document many of time using object (window and self) and they have relation object self in DOM give current window or frame on what laod web site
+
+Object self have global by dependency web site and can be using for asses for method current window or frame 
+
+diference with self and window wich envaroment working with hin
+
+some wxemple method self /window
+
+prototipe in js its thig in object using this create request by object (class) from was created our object - super oblect
+
+with prototipe will code insaide
+
+check if only one obj:
+
+Using only one Object singleton
+
+Mytest.meth = function (){
+if(global.MyClassInstance){
+resolt = global.MyClass.instance
+}else{
+result = new TestClass();
+}
+}
+
+
+FactpryMethod: its pater using for creating object withot rule particular class creat by object
+exemple class factry
+Wen creat exeple different type project on particular parameter wich we will request
+
+Abstract Factory:
+its pater using for pack relation object withot dependency from particular class createt object
+Exemple:
+Factory: wichh create different component user UI (buttom, firld) for different style view (dark, wight) 
+
+Observer :
+ita patern using create dependency with object by way what after changing one object all drprndency will be know and update automatecly
+
+Strategy: its pater using for find pacedg allgoritm whot create by particular task and pick algoritm in process
+Exemple:
+pick algoritm sorting by size array or get strategi user in system
+
+Decorator: its pater using for add dynemic add new functionality object ised objects - decoreter
+exemple:
+add functionalyty for base class - oppartunyty encrypted or onsize when working with working file
+
+09.04.24
+Web Progrming
+
+!Qjuery:
+!main propertys self/window: 
+!self.window: 
+!self.frames: link on object (window) particular frame
+!self.location: link on object which have urel current page (url)
+!self.document: html will show
+!self.alert() method for messadge
+!self.confirm(): access
+self.promt():
+!self.open(): open window 
+!self.close(): close window
+
+!js:
+!getElementById(x);
+html: <id: 123 >
+
+!documeut.creatElement('div');
+!parentEL.appendChild(rl);//dynemic change
+//
+!eltextCotent = 'Query';
+!el.setAtribute('attr', 'value');//can change id
+!el.style.color = 'red';
+//
+[
+!event hanler:
+el.addEvetListenr (
+'click', function (){
+console.log('gad it')
+)
+}
+]
+
+[
+! remove event:
+el.removeEventListen(
+'click', functionName
+);
+]
+
+
+[!link to jQuery :
+on local disk
+<script src='jquery - 3.6.0.min.js'>
+</script>
+
+<script src = ''https:// code.jquery.com>
+link library jquery in using object for work with dom
+name like: $
+!Whont to find id
+$('#id')
+$(.class)// all element class
+$('div');
+$('p.class');
+
+$('#parent.ID').find('div')
+]
+
+[!Loop for geting element
+var any = document.getElementByclassName('class')
+for(var i = 0; i < any.length; ++1){
+console.log(any[i]);
+
+!using Jquery:
+this: context
+$('.class').each(
+function(){
+console.log($(this).text());
+}
+)
+}
+]
+
+[!ading or unading
+var el = $('<div>MinText</div>')
+$(.class).append(el)//add the element
+$('#id').before(el)or affter;
+
+]
+
+[!Canging place
+el.text('text');
+el.html('htmlCode')
+ee.attr('attr', 'value')
+el.css('color', red)
+
+el.
+]
+
+
+
+web Programing
+02.05.24
+
+[Service Angularjs]
+angular.module('app').service('ser', function(){
+    this.say = function(){
+        return 'Hello';
+    }
+});
+
+service: 
+[
+favtory:
+angular.module('app').factory('fac', function(){
+    return {
+        say:: function(){
+            return 'Hello',
+        }
+    }
+})
+]
+
+object insaide withot name
+
+
+//othe exemple function return object and method in ibject return "Hi" 
+angular.mobule('app').provider('pro', function(){
+    return {
+        say: function(){
+            return 'Hi'
+        }
+    }
+})
+
+
+// simple method constant
+angular.module('app').constant('cycom', 'Hi');
+
+
+//value one of the most simple
+angular.value('app').constant('val', 'Hi');
+
+
+[
++ and - avery of service 
+
+1 Service +: simple in using 
+1.2 can use this for create pablic method;
+-have onprivelege in service in useing this
+
+2 factory
+2.1 +
+2.1.1 more powerful bocos can rollback any type object
+2.1.2 Give use oven dependency for crete privet variable and function
+2.2 - get more memory bocos every time create new object when create service 
+3. provider: 
+3.1 + 
+3.1.1 more flexebilyty method bocos they alow seting service in time configuration module
+3.1.2 can create dependency for function and veriadle
+3.2.1 more hard in using if compare with othe method
+4constant:
+4.1 + were simples in using and alow save glodal constant
+4.2 allow when configure module 
+4.2.1 can use for created dynemic variable 
+
+5Value
+5.1.1 + sims on constant but can be cange when program execute
+5.1.2 + allow when configure module
+5.2 - doesent use for create dynemyc variable 
+
+]
+
+service: use for get the value 
+
+App ao angular js can create withot controlr if its simple app 
+
+for create controler we use .controler(); this method get / use 2 argument 
+1 name controler 
+2 fubrical function which use mehanithm dependency injetion for give controler all neede service for realithation controler can be part of "direction" for connection controler use direction to html view ng-controler 
+scope create in enviroment movment controler 
+All scope, which created controler was arginathi in particular hierahy on hieh level were rood scope were rood scope access for $rootScope and every controler which located in teplete create own scope
+Every scope have unig number $scope.$id and relation to parent scope 
+
+Link on root $scope.$root 
+
+When create scope and fubrical function which him realythe in argument write dependenct in one of this its $scope 
+for best pritise amount controler canot be more 2 - 4
+organithation controler 
+1 monolyt controler 
+2 reusles controler 
+3 
+4 dependency
+
+
+
+MVC: model view controler
+monolyte controler
+controler, scope, view
+<body>
+
+
+its first element on one the most simple 
++simple realyhe 
++ doethen need dependency with controler 
++ one view for all app 
+- hard 
+- dont use for big project
+- hard testing 
+- one controler 
+
+function best (){
+    consolelog('new lvel');
+}
+
+best();
+
+
+
+
+
+
+
+
+
+
+

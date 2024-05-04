@@ -1,0 +1,748 @@
+var GuardicoreUtilsAPIV4 = Class.create();
+GuardicoreUtilsAPIV4.prototype = {
+
+    initialize: function() {
+
+        gs.info('Guardicore: UtilsV4 .......... initialized');
+
+        this.dbug = Boolean(current.getValue('debug') >= '1'); // Debug (1 - Standard debug mode) 
+        this.dbug_vm = Boolean(current.getValue('debug') == '2'); // Verbose mode (2 - Verbose debug mode)
+
+        gs.info('gu: initialize(): debug => ' + this.dbug.toString().toUpperCase());
+        gs.info('gu: initialize(): debug verbose mode => ' + this.dbug_vm.toString().toUpperCase());
+
+        // SELF-TERMINATION TIME Settings:
+        this.actualStart = new GlideDateTime();
+        this.terminationTime = new GlideDateTime();
+        this.cancelAfterHours = parseInt(current.getValue('max_execution_time')); // current config contains termination hours		
+        this.terminationTime.addSeconds(3600 * this.cancelAfterHours); //
+    },
+
+    execute: function(configID) {
+        if (this.dbug) gs.info('Phase.1: execute() ... start | ' + gs.getUserName());
+
+        try {
+
+            // STEP.1: READING CONFIG
+
+            var configGR = new GlideRecord('x_akt_guardicore_config');
+            if (configGR.get(configID)) {
+
+                var config = configGR; // Config GlideRecord object //this.config transfer
+
+                // checking for sys_property "planb"
+                var planb = gs.getProperty("x_akt_guardicore.guardicore_config_planb"); // 
+                var isPlanb = planb == 'true'; // planb return string from sys_properties
+                var backupPassword = gs.getProperty("x_akt_guardicore.guardicore_config_password");
+                var backupUsername = gs.getProperty("x_akt_guardicore.guardicore_config_username");
+
+                var userName = '';
+                var password = '';
+
+                if (isPlanb) {
+                    userName = backupUsername;
+                    password = backupPassword;
+                    if (this.dbug) {
+                        gs.info("gu: the credentials were populated from sys_properties");
+                    }
+                } else {
+                    userName = config.getValue('username');
+                    password = config.password.getDecryptedValue();
+                }
+
+                var centraIP = config.getValue('endpoint');
+
+                if (this.dbug_vm) {
+                    gs.info('gu: execute(): configID, userName, centraIP => ' + configID + ', ' + userName + ', ' + centraIP);
+                }
+
+                // STEP.2: ASSEMBLE SERVICENOW REST MESSAGE FOR GETTING ACCESS TOKEN FROM CENTRA REST API
+
+                var sm = new sn_ws.RESTMessageV2('GuardicoreRESTUtils', 'GetToken');
+                sm.setStringParameterNoEscape('aggregatorIP', centraIP);
+
+                var body = {
+                    "username": userName,
+                    "password": password
+                };
+
+                // If MID SERVER is being used - include it into REST Message config:
+
+                if (configGR.mid_server) {
+                    if (this.dbug) {
+                        gs.info('gu: execute() ... using MID Server => ' + configGR.getDisplayValue('mid_server'));
+                    }
+                    sm.setMIDServer(configGR.getDisplayValue('mid_server'));
+                    sm.setEccParameter('skip_sensor', true);
+                }
+
+                sm.setRequestBody(JSON.stringify(body));
+
+                //STEP.3: SENDING REST MESSAGE & RECEIVING CENTRA TOKEN
+
+                var response = sm.execute();
+                var responseBody = response.haveError() ? response.getErrorMessage() : response.getBody();
+                var status = response.getStatusCode();
+                var requestBody = sm ? sm.getRequestBody() : null;
+
+                if (this.dbug_vm) gs.info('gu: execute(): response => ' + JSON.stringify(response.getBody()));
+
+                if (status == 200) {
+                    if (this.dbug) {
+                        if (this.dbug) {
+                            gs.info("gu: execute: Centra IP: " + centraIP + "\nToken receiving successfull HTTP Status: " + status + " | " + gs.getUserName());
+                        }
+                        this.createLabels(configGR, JSON.parse(responseBody).access_token);
+                    }
+                } else {
+                    gs.error("gu: execute() Centra IP: " + centraIP + "\nToken receiving failed, HTTP Status: " + status + ' | ' + body.username);
+                }
+            }
+
+        } catch (ex) {
+            var message = ex.getMessage();
+            gs.error("gu: execute(error) >> Centra IP: " + centraIP + " : " + message + " | " + gs.getUserName());
+        }
+    },
+
+    createLabels: function(configGR, token) {
+        if (this.dbug) gs.info('Phase.2: createLabels() ... start | ' + gs.getUserName());
+
+        try {
+
+            // PARAMETERS SETUP
+
+            var MAXIMUM_STRING_LENGTH = 25000000;
+            var keyFields = configGR.getValue('label_key_fields').toString().split(',');
+            var keyDisplayNames = configGR.getValue('label_key_centra').toString().split(',');
+            var serverTable = configGR.getValue('server_table');
+            var ciFilter = configGR.getValue('encoded_query');
+            var centraIP = configGR.getValue('endpoint');
+            var blockSize = parseInt(configGR.getValue('export_block_size'));
+            var overrideValues = !!configGR.override_values;
+            var ipV6Allowed = !!configGR.export_ipv6;
+            var static = configGR.getValue('static_field');
+            var body = [];
+            var bodyItem = {};
+            var labaelQuantity = 0;
+            var labelcounter = 0;
+            // TEST
+
+
+            // DEBUG
+
+            if (this.dbug_vm) {
+                gs.info('Phase.2: createLabels(): keyFields => ' + keyFields,
+                    '\n Phase.2: createLabels(): keyDisplayName => ' + keyDisplayNames,
+                    '\n Phase.2: createLabels(): serverTable => ' + serverTable,
+                    '\n Phase.2: createLabels(): ciFilter => ' + ciFilter,
+                    '\n Phase.2: createLabels(): centraIP => ' + centraIP,
+                    '\n Phase.2: createLabels(): blockSize => ' + blockSize,
+                    '\n Phase.2: createLabels(): ipV6Allowed => ' + ipV6Allowed,
+                    '\n Phase.2: createLabels(): overrideValues => ' + overrideValues,
+                    '\n Phase.2: this.executionTime() = ' + this.executionTime(),
+                    '\n Phase.2: typeof this.executionTime() => ' + typeof this.executionTime());
+            }
+
+            // INVALID INPUT HANDLER:
+
+            if (!serverTable || !keyFields || !keyDisplayNames || keyFields.length != keyDisplayNames.length) {
+                gs.error("gu: createLabels() >> Centra IP: " + centraIP + "\nInvalid input data. Validate Server table and Label Key fields | " + gs.getUserName());
+                return;
+            }
+
+            // ASSEMBLING LABELS
+
+            for (var i = 0; i < keyFields.length; i++) {
+                if (this.executionTime()) {
+
+                    var fieldName = keyFields[i];
+                    var fieldDisplayName = keyDisplayNames[i];
+
+                    // MAIN QUERY
+
+                    // GROUP BY FIELD
+
+                    var gaServer = new GlideAggregate(serverTable);
+                    gaServer.addNotNullQuery('ip_address');
+                    if (static === 'ip_hostname') {
+                        if (this.dbug) {
+                            gs.info("gu: host_name will be populated with fqdn"); // no need query here
+                        }
+                    } else {
+                        gaServer.addNotNullQuery('mac_address');
+                    }
+
+
+                    gaServer.addNotNullQuery(fieldName); // Experiment - why it works?
+                    if (ciFilter) {
+                        gaServer.addEncodedQuery(ciFilter); // Does not work with conflicting filters!
+                    }
+                    gaServer.groupBy(fieldName); // group records by the same value of a field - create grouped labels
+                    gaServer.addAggregate('COUNT');
+                    gaServer.query();
+
+                    if (this.dbug_vm) {
+                        gs.info('gu: createLabels() => (Label groups for FieldName: *' + fieldName + '*) ' + gaServer.getAggregate('COUNT') + ' | ' + gs.getUserName());
+                    }
+
+
+                    // WORK WITH VALUES:
+
+                    while (gaServer.next() && (this.executionTime())) { // Group looping
+                        var criteriaArray = [];
+
+                        var server = new GlideRecord(serverTable);
+                        server.addNotNullQuery('ip_address');
+                        server.addQuery(fieldName, gaServer.getValue(fieldName)); // why it works?
+                        if (ciFilter)
+                            server.addEncodedQuery(ciFilter);
+                        server.query();
+
+                        while (server.next() && (this.executionTime())) {
+                            var ipArray = this.getIPs(server.ip_address, server.name, ipV6Allowed);
+                            var nics = [];
+                            var hostname = 'host_name';
+
+                            if (static === 'ip_hostname') {
+                                var isHostname = !!server.getValue('host_name'); // !! => to Boolean "asvasda" -> true "" -> false
+                                var isFqdn = !!server.getValue('fqdn');
+                                if (isHostname && isFqdn) {
+                                    if (this.dbug) {
+                                        gs.info("gu: host_name and fqdn exist");
+                                    }
+                                }
+
+
+                                for (var j = 0; j < ipArray.length; j++) {
+                                    nics.push({
+                                        "mac_address": "",
+                                        "ip_addresses": [server.getValue('ip_address')]
+                                    });
+
+                                    if (isHostname && isFqdn) {
+                                        hostname = 'host_name'; 
+                                        criteriaArray.push({
+                                            "nics": nics,
+                                            "hostname": server.getValue(hostname)
+                                        });
+										
+                                        hostname = 'fqdn'; 
+                                        criteriaArray.push({
+                                            "nics": nics,
+                                            "hostname": server.getValue(hostname)
+                                        });
+                                    } else {
+                                        if (isHostname) {
+                                            hostname = 'host_name';
+                                            criteriaArray.push({
+                                                "nics": nics,
+                                                "hostname": server.getValue(hostname)
+                                            });
+                                        } else {
+                                            if (isFqdn) {
+                                                hostname = 'fqdn';
+                                                criteriaArray.push({
+                                                    "nics": nics,
+                                                    "hostname": server.getValue(hostname)
+                                                });
+                                            } else {
+                                                if (this.dbug) {
+                                                    gs.info('gu: FQDN and hostname are empty');
+                                                }
+                                            }
+                                        }
+                                    }
+									
+                                    labelcounter = labelcounter + 1;
+                                    configGR.setValue('labels_counter', labelcounter);
+                                    configGR.setWorkflow(false);
+                                    configGR.update();
+
+                                }
+                            } else { // if "IP+MAC" mode
+                                for (var k = 0; k < ipArray.length; k++) {
+                                    nics.push({
+                                        "mac_address": server.getValue("mac_address"), // "00-B0-D0-63-C2-26"
+                                        "ip_addresses": [server.getValue('ip_address')]
+                                    });
+                                    criteriaArray.push({
+                                        "nics": nics
+                                    });
+                                    labelcounter = labelcounter + 1;
+                                    // Update the counter in the configuration record
+                                    configGR.setValue('labels_counter', labelcounter);
+                                    configGR.setWorkflow(false);
+                                    configGR.update();
+
+                                }
+                            }
+
+                            if (this.executionTime()) this._processRelationships(server, centraIP, token, overrideValues, blockSize, configGR, ipV6Allowed, labelcounter);
+                        }
+
+                        labaelQuantity += criteriaArray.length; //TEST
+
+
+                        if (this.dbug_vm) {
+                            gs.info('gu: createLabels() LENGTH ' + criteriaArray.length);
+                        }
+
+                        if (criteriaArray.length > 0) {
+                            bodyItem = {
+                                "label_key": fieldDisplayName,
+                                "label_value": gaServer.getDisplayValue(fieldName), //val, // Support of Dot-Walking
+                                "assets_details": criteriaArray
+                            };
+                        }
+                        if (body.length < blockSize && JSON.stringify(body).length < MAXIMUM_STRING_LENGTH) {
+                            // if body is not yet full - add bodyItem to it
+                            body.push(bodyItem);
+                        } else {
+                            // if body is full - need to send content, empty body and put bodyItem into empty body
+                            if (this.executionTime()) this._sendLabelsRequest(centraIP, token, body, overrideValues, configGR);
+                            body = [];
+                            body.push(bodyItem);
+                        }
+                    }
+                }
+            }
+
+
+
+            if (this.dbug_vm) {
+                gs.info('gu: createLables() => body is ' + JSON.stringify(body));
+            }
+
+            if (body) {
+                if (this.executionTime()) this._sendLabelsRequest(centraIP, token, body, overrideValues, configGR);
+            }
+
+            if (this.dbug) {
+                gs.info('gu: createLables() => LABEL QUANTITY ' + labaelQuantity,
+                    '\n gu: createLabels() => Label create/update operation has been finished.');
+
+                var GDTStatus = this.terminationTime.after(new GlideDateTime()) ? ' : DONE' : ' : PROBLEM - very long time';
+                gs.info('INFO *** STARTED at ' + this.actualStart + ' FINISHED at ' + new GlideDateTime() + GDTStatus);
+
+            }
+
+        } catch (ex) {
+            gs.error('Phase.2:Error! > ' + ex + "\n" + "Phase.2: createLabels() >> Centra IP: " + centraIP + "\nException creation/updation labels: " + ex.message + " | " + gs.getUserName());
+        }
+    },
+
+    _processRelationships: function(server, centraIP, token, overrideValues, blockSize, configGR, ipV6Allowed, labelcounter) {
+        var cfg = new GlideRecord('x_akt_guardicore_config');
+        cfg.addQuery('parent', configGR.sys_id.toString());
+        cfg.query();
+        gs.info('Dont have any relation');
+        if (cfg.hasNext()) {
+            if (this.dbug_vm) gs.info('Relationships(-1-): _processRelationships() ... start | ' + gs.getUserName()); // DEBUG
+
+            try {
+
+                var MAXIMUM_STRING_LENGTH = 25000000;
+                var body = [];
+                var serverID = server.getUniqueValue();
+
+                var rel = new GlideRecord('cmdb_rel_ci');
+                rel.addEncodedQuery('child=' + serverID + '^ORparent=' + serverID);
+                rel.addNotNullQuery('parent');
+                rel.addNotNullQuery('child');
+                rel.query();
+
+                var relCount = new GlideAggregate('cmdb_rel_ci');
+                relCount.addEncodedQuery('child=' + serverID + '^ORparent=' + serverID);
+                relCount.addNotNullQuery('parent');
+                relCount.addNotNullQuery('child');
+                relCount.addAggregate('COUNT');
+                relCount.query();
+                relCount.next();
+
+
+
+                if (this.dbug_vm) {
+                    gs.info('Relationships(-2-): _processRelationships() => found total relationships(' + server.name + '): ' + relCount.getAggregate('COUNT') + ' | ' + gs.getUserName());
+                }
+
+
+
+                var numberOfRelationships = relCount.getAggregate('COUNT');
+
+                if (numberOfRelationships == 0) {
+                    gs.info('Relationships stop process' + server.name + '): ' + relCount.getAggregate('COUNT') + ' | ' + gs.getUserName());
+                    return;
+                } else {
+                    gs.info('Continue relationships' + server.name + '): ' + relCount.getAggregate('COUNT') + ' | ' + gs.getUserName());
+                }
+
+                while (rel.next() && (this.executionTime())) {
+
+                    var relRecord = rel.getValue('child') == serverID ? rel.parent.getRefRecord() : rel.child.getRefRecord(); // relRecord is a related CI (Business Service, Business Application etc)
+                    var criteriaArray = [];
+
+                    //IPs that belong to the all CI from main configuration
+                    var stringIP = '';
+                    var relBack = new GlideRecord('cmdb_rel_ci');
+                    relBack.addEncodedQuery('child=' + relRecord.sys_id.toString() + '^ORparent=' + relRecord.sys_id.toString()); // get all relationships of Related CI
+                    relBack.addNotNullQuery('parent');
+                    relBack.addNotNullQuery('child');
+                    relBack.query();
+
+                    // run through all realted CIs of our Related CI (Businsess Service, App etc)
+                    while (relBack.next()) {
+                        var relBackRecord = relBack.getValue('child') == relRecord.getUniqueValue() ? relBack.parent.getRefRecord() : relBack.child.getRefRecord(); // CI related to Related CI
+
+                        //relBackRecord must filtered by configGR.getValue('encoded_query')
+                        var queryMatchBack = GlideFilter.checkRecord(relBackRecord, configGR.encoded_query.toString());
+
+                        gs.info('queryMatchBack => ' + queryMatchBack + ', relBackRecord:' + relBackRecord.name + '[' + relBackRecord.sys_class_name + ' << ' + relRecord.name);
+
+
+                        var childTablesArray = (new GlideTableHierarchy(configGR.getValue('server_table')).getTableExtensions());
+                        childTablesArray.push(relBackRecord.getTableName()); // include main config CI into analysis also
+                        var isChild = false;
+
+                        for (var i = 0; i < childTablesArray.length; i++) {
+                            if (childTablesArray[i] == relBackRecord.getTableName()) {
+                                isChild = true;
+                            }
+
+                        }
+
+                        //if (relBackRecord.getTableName() == configGR.getValue('server_table') && queryMatchBack == true) {
+                        if (isChild && queryMatchBack == true) {
+                            if (stringIP) {
+                                stringIP += ',' + relBackRecord.ip_address;
+                            } else {
+                                stringIP = relBackRecord.ip_address;
+                            }
+                        }
+                    }
+					
+                    var ipArray = this.getIPs(stringIP, relRecord.name, ipV6Allowed); // IPs that belong to the all CI from main configuration
+                    var nics = [];
+                    var static = configGR.getValue('static_field');
+                    var hostname = 'host_name';
+                    if (static === 'ip_hostname') {
+						var isHostname = !!server.getValue('host_name'); // !! => to Boolean
+						var isFqdn = !!server.getValue('fqdn');
+						if (isHostname && isFqdn) {
+							if (this.dbug) {
+								gs.info("gu: host_name and fqdn exist in child record");
+							}
+						}
+
+						
+                        for (var j = 0; j < ipArray.length; j++) {
+                            nics.push({
+                                "mac_address": "",
+                                "ip_addresses": [relRecord.getValue('ip_address')]
+                            });
+							
+							
+							if (isHostname && isFqdn) {
+								hostname = 'host_name'; 
+								criteriaArray.push({
+									"nics": nics,
+									"hostname": server.getValue(hostname)
+								});
+
+								hostname = 'fqdn'; 
+								criteriaArray.push({
+									"nics": nics,
+									"hostname": server.getValue(hostname)
+								});
+							} else {
+								if (isHostname) {
+									hostname = 'host_name';
+									criteriaArray.push({
+										"nics": nics,
+										"hostname": server.getValue(hostname)
+									});
+								} else {
+									if (isFqdn) {
+										hostname = 'fqdn';
+										criteriaArray.push({
+											"nics": nics,
+											"hostname": server.getValue(hostname)
+										});
+									} else {
+										if (this.dbug) {
+											gs.info('gu: FQDN and hostname are empty in child record');
+										}
+									}
+								}
+							}							
+							
+                            labelcounter = labelcounter + 1;
+                            configGR.setValue('labels_counter', labelcounter);
+                            configGR.setWorkflow(false);
+                            configGR.update();
+                        }
+                    } else {
+                        for (var k = 0; k < ipArray.length; k++) {
+							
+                            nics.push({
+                                "mac_address": relRecord.getValue("mac_address"), // "00-B0-D0-63-C2-26"
+                                "ip_addresses": [relRecord.getValue('ip_address')]
+                            });
+                            criteriaArray.push({
+                                "nics": nics
+                            });
+							
+							
+                            labelcounter = labelcounter + 1;
+                            configGR.setValue('labels_counter', labelcounter);
+                            configGR.setWorkflow(false);
+                            configGR.update();
+                        }
+                    }
+					
+					// DELETE -1 !!! TEST
+                    configGR.setValue('labels_counter', labelcounter - 1); // -1 for parent config
+                    configGR.setWorkflow(false);
+                    configGR.update();
+
+                    var chTable = new GlideRecord('x_akt_guardicore_config');
+                    chTable.addQuery('active', true);
+                    chTable.addQuery('server_table', relRecord.getTableName());
+                    chTable.addQuery('parent', configGR.getUniqueValue());
+                    chTable.query();
+
+                    var chTableCount = new GlideAggregate('x_akt_guardicore_config');
+                    chTableCount.addQuery('active', true);
+                    chTableCount.addQuery('server_table', relRecord.getTableName());
+                    chTableCount.addQuery('parent', configGR.getUniqueValue());
+                    chTableCount.addAggregate('COUNT');
+                    chTableCount.query();
+                    chTableCount.next();
+
+                    if (this.dbug_vm) gs.info('Relationships(-3-): _processRelationships() => found configs(chTable): ' + chTableCount.getAggregate('COUNT') + ' | ' + gs.getUserName());
+
+                    while (chTable.next() && (this.executionTime())) {
+                        var queryMatch = GlideFilter.checkRecord(relRecord, chTable.encoded_query.toString());
+                        gs.info('queryMatch => ' + queryMatch + ' >> ' + typeof chTable.getValue('encoded_query'));
+
+                        if (!chTable.getValue('encoded_query') || queryMatch == true) {
+
+                            var keyFieldsChild = ('' + chTable.getValue('label_key_fields')).toString().split(',');
+                            var keyDisplayNamesChild = ('' + chTable.getValue('label_key_centra')).toString().split(',');
+
+                            var bodyItem = {};
+
+                            for (var y = 0; y < keyFieldsChild.length; y++) {
+
+                                var fieldNameChild = keyFieldsChild[y];
+                                var fieldDisplayNameChild = keyDisplayNamesChild[y];
+
+                                if (relRecord.getDisplayValue(fieldNameChild)) { // why it works ?                              
+                                    bodyItem = {
+                                        "label_key": fieldDisplayNameChild,
+                                        "label_value": relRecord.getDisplayValue(fieldNameChild), //val2, // Dot-Walking Support - why it works?
+                                        "assets_details": criteriaArray
+                                    };
+                                }
+                                if (criteriaArray.length > 0) {
+
+                                    if (body.length < blockSize && JSON.stringify(body).length < MAXIMUM_STRING_LENGTH) {
+                                        body.push(bodyItem);
+
+                                    } else {
+                                        if (this.dbug_vm) {
+                                            gs.info('gu:Child Body is: ' + JSON.stringify(body));
+                                        }
+
+                                        if (this.executionTime()) this._sendLabelsRequest(centraIP, token, body, overrideValues, configGR);
+                                        body = [];
+                                        body.push(bodyItem);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (this.dbug_vm) {
+                    gs.info('Relationships(-4-): Child Body is: ' + JSON.stringify(body));
+                }
+
+                if (this.executionTime()) this._sendLabelsRequest(centraIP, token, body, overrideValues, configGR);
+
+            } catch (ex) {
+                var message = ex.message;
+                gs.error("Relationships(5): processRelationships() >> Centra IP: " + centraIP + "\nException creation/updation relationships labels: " + message, "GuardicoreUtilsAPIV4 by " + gs.getUserName());
+            }
+        }
+    },
+
+    _sendLabelsRequest: function(centraIP, token, body, overrideValues, configGR) {
+        if (this.dbug) {
+            gs.info('Phase.3: _sendLabelsRequest() ... started | ' + gs.getUserName());
+
+        }
+        if (this.dbug_vm) {
+            gs.debug(JSON.stringify(body));
+        }
+
+        var sm = new sn_ws.RESTMessageV2('GuardicoreRESTUtils', 'CreateLabelsV4');
+        sm.setStringParameter('aggregatorIP', centraIP);
+        sm.setRequestHeader('Authorization', 'bearer' + ' ' + token);
+        sm.setRequestBody(JSON.stringify(body));
+
+        if (configGR.mid_server) {
+            if (this.dbug) gs.info('gu: _sendLabelsRequest() ... using MID Server => ' + configGR.getDisplayValue('mid_server'));
+            sm.setMIDServer(configGR.getDisplayValue('mid_server'));
+            sm.setEccParameter('skip_sensor', true);
+        }
+
+        if (this.dbug_vm) {
+            gs.debug("gu: _sendLabelsRequest() >> Centra IP: " + centraIP + "\nRequest to create " + body.length + ' label(s) was sent | ' + gs.getUserName());
+        }
+
+        if (overrideValues == true) {
+            sm.setQueryParameter('override', 'true');
+        } else {
+            sm.setQueryParameter('override', 'false');
+        }
+
+        var response = sm.execute();
+        var responseBody = response.haveError() ? response.getErrorMessage() : response.getBody();
+        var status = response.getStatusCode();
+
+        if (this.dbug) {
+            if (status == 200)
+                gs.info("gu: _sendLabelsRequest() >> Centra IP: " + centraIP + "\nLabel creation/updation successfull, HTTP Status: " + status + ' Response:' + responseBody + " | " + gs.getUserName());
+            else {
+                gs.error("gu: _sendLabelsRequest() >> Centra IP: " + centraIP + "\nLabel creation/updation failed, HTTP Status: " + status + ' Response:' + responseBody + " | " + gs.getUserName());
+            }
+        }
+    },
+
+    validIP: function(ip, name, ipV6allowed) {
+
+        // PATTERNS
+        var ipv4_reg = /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$/;
+        var ipv4v6_reg = /((^\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\s*$)|(^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$))/g;
+
+        // DO NOT EXPORT IPs that start with: 169.254 
+        var restrictedStart = '169.254';
+
+        if (ip.startsWith(restrictedStart)) {
+            gs.debug("gu: validIP() >> Found Restricted Starting IP for CI " + name + " , ignoring it: " + ip + " | " + gs.getUserName());
+            return false;
+        }
+
+        var ip_reg = ipV6allowed == true ? ipv4v6_reg : ipv4_reg;
+
+        if (!ip_reg.test(ip.trim())) {
+            if (this.dbug) {
+                gs.debug("gu: validIP() >> Found invalid IP for CI " + name + " , ignoring it: " + ip + " | " + gs.getUserName());
+            }
+            return false;
+        }
+
+        return true;
+    },
+
+    /* Returns an array of IPs 
+     */
+    getIPs: function(ips_str, name, ipV6allowed) {
+        if (this.dbug) gs.info('gu: getIPs() ... start | ' + gs.getUserName());
+
+        var ips_list = ips_str.split(','); // Array	
+        var resultedIPs = [];
+
+        for (var i = 0; i < ips_list.length; i++) {
+            ips_list[i] = ips_list[i].trim();
+            if (this.validIP(ips_list[i], name, ipV6allowed)) {
+                resultedIPs.push(ips_list[i]);
+            }
+        }
+
+        if (this.dbug_vm) {
+            gs.info('gu: getIPs:resultedIps.length = ' + resultedIPs.length);
+        }
+
+        return resultedIPs; // Array of IPs
+    },
+
+    executionTime: function() {
+        return this.terminationTime.after(new GlideDateTime());
+    },
+
+
+    scheduleExport: function() {
+
+    },
+
+    testConnection: function(configID) {
+        gs.info('TESTING: testConnection() ... start | ' + gs.getUserName());
+
+        try {
+
+            var configGR = new GlideRecord('x_akt_guardicore_config');
+            if (configGR.get(configID)) {
+
+                var config = configGR;
+
+                // checking for sys_property "planb"
+                var planb = gs.getProperty("x_akt_guardicore.guardicore_config_planb"); // 
+                var isPlanb = planb == 'true'; // planb return string from sys_properties
+                var backupPassword = gs.getProperty("x_akt_guardicore.guardicore_config_password");
+                var backupUsername = gs.getProperty("x_akt_guardicore.guardicore_config_username");
+
+                var userName = '';
+                var password = '';
+
+                if (isPlanb) {
+                    userName = backupUsername;
+                    password = backupPassword;
+                    if (this.dbug) {
+                        gs.info("gu: the credentials were populated from sys_properties");
+                    }
+                } else {
+                    userName = config.getValue('username');
+                    password = 'Aew5eengahce'; // config.password.getDecryptedValue();
+                }
+                //                 var userName = config.getValue('username');
+                //                 var password = 'Aew5eengahce'; //config.password.getDecryptedValue();
+                var centraIP = config.getValue('endpoint');
+
+                var sm = new sn_ws.RESTMessageV2('GuardicoreRESTUtils', 'GetToken');
+                sm.setStringParameterNoEscape('aggregatorIP', centraIP);
+
+                if (configGR.mid_server) {
+                    gs.info('gu: testConnection() ... using MID Server => ' + configGR.getDisplayValue('mid_server'));
+                    sm.setMIDServer(configGR.getDisplayValue('mid_server'));
+                    sm.setEccParameter('skip_sensor', true);
+                }
+
+                var body = {
+                    "username": userName,
+                    "password": password
+                };
+
+                sm.setRequestBody(JSON.stringify(body));
+                var response = sm.execute();
+                var responseBody = response.haveError() ? response.getErrorMessage() : response.getBody();
+                var status = response.getStatusCode();
+                var requestBody = sm ? sm.getRequestBody() : null;
+
+                if (status == 200) {
+                    gs.addInfoMessage("Connection is OK. Authentication is successfull.");
+                } else {
+                    gs.addErrorMessage("Testing Connection failed. HTTP Status: " + status + '\nResponse: ' + responseBody);
+                }
+
+            }
+
+        } catch (ex) {
+            gs.error(ex + "\n" + "gu: Centra IP: " + centraIP + "\nException while testing the connection: " + ex.getMessage() + " | " + gs.getUserName());
+        }
+    },
+
+
+    type: 'GuardicoreUtilsAPIV4'
+};

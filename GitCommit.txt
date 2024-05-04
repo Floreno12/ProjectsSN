@@ -1,0 +1,13 @@
+for trobelshut:git pull origin main --allow-unrelated-histories
+
+
+
+
+git add <resolved-files>
+git commit -m "Resolved merge conflicts" //need change the name for commit
+git remote add origin https://github.com/Floreno12/CreateConfig.git
+git push -u origin main
+
+
+
+CreateConfig

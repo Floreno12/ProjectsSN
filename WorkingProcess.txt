@@ -1,0 +1,102 @@
+gs.addInfoMessage('Starting to calculate labels');
+gs.eventQueue('x_akt_guardicore.count_label', current, current.sys_id.toString());
+action.setRedirectURL(current);
+
+https://chromewebstore.google.com/detail/time-tracker/dkdhhcbjijekmneelocdllcldcpmekmm
+
+
+//Sepio save
+function saveAndStay(){
+		g_form.submit();
+}
+
+quetions
+https://ven04516.service-now.com/scripts/classes/doctype/GlideModal.js
+ for InCountry:
+ 1.were we get data (object) for configuration around propertys// declaret controler as object 
+ 2 were request the data from controller
+ 3 as i undestend we request data on othe logic
+ 4 i wont undestend were i get all method were i can research this
+ 5 what meen "scratchpad"
+ 6 how application start to execute
+ //were data was going InCountry
+ 
+ 
+
+ 7Why we use window in one of the context
+ 8 i can use documentation wich using in the script?
+quetions about this script incluse 	607		var ga = new GlideAjax('icRemoteDataAjax');
+ 
+ 
+ how we get this 2 link: 
+
+ this._fields = _fields;
+ this.form = form; // link to form
+ 
+ 
+ 
+ 
+ "more active and never to scare issue its okay "
+ 
+ 
+ 
+ 
+ 
+
+
+My sourse that i find 
+UI Bilder?
+
+1.figuraute how it work withou initialithation:
+} else if (this.ui_type == this.UI_TYPE.SP)
+
+2.in one of the function can be the conflict betvine AngularJS & jQuery
+
+
+research (dom)
+
+($.getScript) from jQuery using for load external files with asynk 
+
+
+wen you accidently delete record you can use: Navigate to All > System Definition > Deleted Records. Open the deleted record that you want to restore.
+
+UI Actions: UI Actions are buttons, links, or context menu selections on forms and lists. They can be used to perform various actions like navigating to a different page, updating a field on a record, etc1.
+Client Scripts: Client Scripts are used to manipulate form fields, hide/show elements, or even fetch data from the server using GlideAjax1.
+Business Rules: Business Rules are server-side scripts that execute whenever a record is queried, displayed, updated, inserted, or deleted1.
+Workspace Experiences: In the Now Platform UI Framework, you can create workspace experiences that include components such as lists, forms, and other UI components. You can add logic to these components using JavaScript and AngularJS.
+
+If you want to reuse some JavaScript code across these different scripts, you can define it in a UI Script and then call that UI Script from your UI Actions, Client Scripts, Business Rules, or workspace experiences.
+
+
++0,5 + 0,6 testing application
+
+
+
+Need to find were located: this.handling = scratchpad.icrd.handling_type; (bisness rule)
+
+This script include usind in script (Ui script) on form
+https://ven04516.service-now.com/sys_script_include.do?sys_id=b7a4cc57dbbba0104755144e13961963
+https://ven04516.service-now.com/sys_script_include.do?sys_id=57f2ebbbdbe7901069f95e25ca96191c
+https://ven04516.service-now.com/sys_script_include.do?sys_id=d324fed80a0a0b54005b8345327ef603
+https://ven04516.service-now.com/sys_script_include.do?sys_id=a67d4f5adb7f981069f95e25ca961918
+
+
+
+On every call i need to create my own presentation about a something
+
+Importance nodes by code InCountry
+1.Scratchpad: in context service now its bissnes rule wich allow to get server side parameter it can be some (field) and after integrate this in the your script 
+in this context when we open form, in this context i request logic from one place in other
+
+
+2.addTopRenderEvent: its event was created platform service now, with this event we know wen all was load after we can indegrate the our logic
+
+3. parent.good = function() its was add in good logic from this function 
+
+4 xhrsave: instal data from othe side (klient)
+  xhrloud: save data in othe side (klient)
+  xhrsend: its like rail for our packedge the working with other side (klient)
+
+My// DOM event and how create processors event
+
+123

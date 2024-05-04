@@ -1,0 +1,12 @@
+25.04.24: create code for automaticly show the message below "calculete labels" when labels execute show message that ("labels is processing")
+25.04.24: auto population configuration whith data which people are choice (dependency from modes)
+25.04.24: controler for list in service now use the config and 2 logic script include and Ui script
+25.04.24: test with scheduler start and manualy
+25.04.24: call here .GuardicoreUtils() calculate script include
+
+26.04.24:  testing application calculate on 20 config
+26.04.24: ceate documentation about for manual testing
+
+
+26.04.24 on submit whenn populet child config;
+26.04.24 create bussnes ruler for insert the child record 

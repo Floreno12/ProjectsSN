@@ -1,0 +1,41 @@
+var configGR = new GlideRecord('x_akt_guardicore_config');
+configGR.addQuery('sys_id', '9d70259393db311022a6bba97bba10fa')
+configGR.query();
+
+gs.info('config now' +configGR.sys_id.toString);
+
+var serverTable = configGR.getValue('server_table');
+var server = new GlideRecord(serverTable);
+//server.addNotNullQuery('ip_address');
+//server.query();
+
+var serverID = server.getUniqueValue();
+
+var MyObject = {
+    CiListForAnalysis: [],
+
+    refRelationships: function(serverID) {
+        var L1Link = new GlideRecord('cmdb_rel_ci');
+        L1Link.addEncodedQuery('child=' + serverID + '^ORparent=' + serverID);
+        L1Link.addEncodedQuery('sys_id', 'NOT IN', this.CiListForAnalysis);
+        L1Link.addNotNullQuery('parent');
+        L1Link.addNotNullQuery('child');
+        L1Link.query();
+        while (L1Link.next()) {
+            this.CiListForAnalysis.push(L1Link.sys_id.toString());
+            this.refRelationships(L1Link.sys_id.toString()); // Call recursively on "this" object
+
+            // HERE: Action with unique CI
+
+            // REMOVE CI item
+            var index = this.CiListForAnalysis.indexOf(L1Link.sys_id.toString());
+            if (index > -1) { // only splice array when item is found
+                this.CiListForAnalysis.splice(index, 1); // 2nd parameter means remove one item only
+            }
+        }
+    }
+};
+
+// Usage:
+MyObject.refRelationships('serverID_to_start_from');
+    

@@ -1,0 +1,13 @@
+git add . //its for pick all data
+git add get.js //its using for particular file
+pera CS:
+echo "# Cyber-Security" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/Floreno12/Cyber-Security.git
+git push -u origin main
+
+
+//if you wont push data in other repository just change name into command 
