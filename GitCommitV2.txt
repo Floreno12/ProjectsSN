@@ -1,0 +1,41 @@
+for trobelshut:git pull origin main --allow-unrelated-histories
+
+[
+if you wont push in other repository:
+git remote set-url origin https://github.com/Floreno12/Cyber-Security.git
+//
+git remote remove origin
+git remote add origin https://github.com/Floreno12/Cyber-Security.git
+
+
+
+
+]
+
+[
+    check with whor repository you are work:
+    git remote -v
+
+]
+
+
+
+git add <resolved-files>
+git commit -m "your comment" 
+git remote add origin https://github.com/Floreno12/CreateConfig.git
+git push -u origin main
+
+
+
+CreateConfig
+
+05.05.24
+stem on mac OS
+1. git add .
+2. git commit -m "all"
+3. git remote remove origin
+git remote add origin https://github.com/Floreno12/ProjectsSN.git
+
+4. git remote add origin https://github.com/Floreno12/ProjectsSN.git
+git branch -M main
+git push -u origin main
