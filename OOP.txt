@@ -377,4 +377,89 @@ ready to groven up with the team, with you can inclise prodactivity your commany
 
 Thanks Denis Gaidai
 
+set up the crucifix:
 
+
+08.05.24
+[
+FQDN- domaine name 
+its domaine address server which recange in IP address in DNS server
+
+]
+in this moment user name and password its not system user and dont user which we create in dable mysql its user particular my sql 
+
+?GRAND PRIVELEGES...
+?FLUSH PRIVILEGES...
+
+[
+teg <form> have 2 important thing its (action ='your script'  method= POST,GET)
+if you wont get data from form in code mehanithm php use method $_POST, $GET
+]
+
+[
+for php mehanithm can get particular parameter from form in teg insaide form need create atribute name
+if i wont get walue from forn need use $_POSR = ['password']
+step:
+get parameter fron form 
+push this value into php
+
+php create mysql request data
+
+for creta esql request use method query object mysqlI
+
+exemple request:
+$result = $con(constructor) = query($sql);//connection
+$row = $resolt
+
+it this exemple method fetch_assoc() get one lne from resoult execute sql request and writhe resoult into veriable $row and varibel row its have access record insaide table 
+exemple:
+mysql:[name: user, password: pass1]
+$row = [name]; //get name from mysql
+
+//get from form
+$pass = $_POST['password'];
+//get from mysql
+pass = $row['password]
+
+if(pass = pass)
+
+for compare password from form and mysql use the method password werifai which give password for com
+e
+parepassword_verifay('p1,p2);
+but save password in open view in table sql its not secure.
+its give opportynity hackers have access into sql can get all password withou problem
+And password saving like hash;
+for creat hash with open password use function password hash 
+exemple:
+password_hash(p1,hash)
+
+in resoult can write in variable and ofter request into sql
+
+PASSWORD_DECRIPT = [count = 12]// cretate function which shifr
+
+08.05.24
+filter anfularjs
+filter its function whith regoing data (how simple and hard "array", 'collection') its say that with big data its give more execution time - in this more good in this situation caning format data model 
+
+collection = object, class, hrd type
+Filter can be 2 maine cotegiri:
+1) filter simple data and complexity
+angularjs have 
+recange symvol into upercade
+2)lowecase
+3)limitTo
+like this 3 filter use for data type string but filter limit to can be use for integer in this situation willbe recanhe integer inro string, filter limt_TO cut value into particuler limit;
+4)currency regabge into currency
+5) date form value data 
+6) JSON rechange data into JSON
+7)linky: need to use module ngSanitith this filter search link into text which dont have active links and rechange thay in active and add him in teg <a>
+https//:google.com
+exemple: <a href = 'https//:google.com'>
+
+Filter can be use on side view (templet) and in js exemple syntax:
+
+
+
+
+
+]
