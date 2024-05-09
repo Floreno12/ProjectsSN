@@ -1,0 +1,61 @@
+function calculateTeamFinanceReport(salaries,team){
+var totalsalaries = {};
+var Maney = 0;
+
+team.forEach(member => {
+
+    var getSpecialithations = member.specialization;
+    console.log('goog experiance ', getSpecialithations);
+    var Salaries = salaries[getSpecialithations].salary;
+    var tax = parseFloat(salaries[getSpecialithations].tax) / 100;
+    console.log('Present here ', tax);
+
+
+    var Calculet = Math.round(Salaries / (1 - tax));
+    console.log('get more information here ', Calculet);
+
+Maney += Calculet;
+console.log('expected ', Maney);
+if(!totalsalaries[`totalBudget${getSpecialithations}`]){
+    totalsalaries[`totalBudget${getSpecialithations}`] = 0;
+}
+totalsalaries[`totalBudget${getSpecialithations}`] += Calculet;
+
+
+
+});
+totalsalaries.Maney = Maney;
+return totalsalaries;
+}
+
+
+
+var money = {
+    Progger: { 
+        salary: 1000, 
+        tax: "15%" 
+    },
+    Tester: {
+        salary: 1000,
+        tax: "10%"
+    }
+}
+
+
+
+var specialization = [
+    {
+        name: "Masha", 
+        specialization: "Progger" 
+    },
+    {
+        name: "Vasya",
+        specialization: "Tester"
+    },
+    {
+        name: "Taras",
+        specialization: "Tester"
+    },
+]
+
+var already = console.log(JSON.stringify(calculateTeamFinanceReport(money, specialization)));
