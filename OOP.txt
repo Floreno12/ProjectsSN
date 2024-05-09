@@ -456,10 +456,148 @@ like this 3 filter use for data type string but filter limit to can be use for i
 https//:google.com
 exemple: <a href = 'https//:google.com'>
 
+use for view:
 Filter can be use on side view (templet) and in js exemple syntax:
+{{expr / filterName: p1 : p2 }}
+$filter ('name')(data,p1,p2)
 
-
-
-
+JS
+{{p.name/ lowecase}}
+{{p.category/uppercase}}
+[
+{{p.category/limitTO :5:6}}
+firs parameter filter_TO its symvol say have many symvol need to cut 
+]
 
 ]
+
+OOP
+09.05.24
+<tr ng-repcat = "p in vm.prodycts>//repid arraty when find p in array
+angular.modele('app', [featwe]);//othe module which something say
+//create controler
+.controler("Defolt", "Any");
+function any(){//producst data
+    var vm = this.product.data
+    vm.products - productData.product;
+}
+
+
+//new angularan
+angular.module('feache'){
+    .factory('pData', pData){
+        function pData{
+            return{
+                products[
+                    {
+                        "values": "chang",
+                        "category": "balk",
+                        "tall": 'here'
+                    }
+                ]
+            }
+        }
+    }
+}
+
+//filter for data:
+{{p.expData / date: p1 : p2}}
+parametr1 say about format data
+parm2 on time zona
+
+data can be in format in text line
+js object data;
+milisecond;
+
+foramt date
+[
+$filter ('data').(data, format, timezone)
+//format data in text line 
+YYYY 2025
+YY 25
+MMMM Februari
+MM Feb
+m
+EEEE - tuesday
+EEE - tue
+ww - 00-56;
+w = 0-56
+
+h -12
+]
+z- Timethon
+
+.countroler(Defoult)
+{{vm.getExpDate(p.date)}}
+vm.getExpDate = function(days){
+    var now = new Date()
+    return now.setDate(now.getDate())
+    now.getDate() + days);
+}
+
+//Localithation
+<script src = 'aungular - locate_fr_fr.js'>
+
+-lacate - fr - fr.js>//1 currenc, 2 country 
+</script>
+
+
+a18 different localithation
+
+limitTo: 3 from start 
+limetTo: -3; from Extend
+
+
+
+filter in angular//use array
+<tr ng_repcat = 'p in vm_produets' / or orderBy: "name: true">"-name">
+
+vm.dragon>
+
+.countroler()
+vm.daragon = function(item)
+return item.exp > 0? item.pria: 0;
+
+
+
+//new Topic
+filter 
+<tr || |filter: object>
+
+<Input
+
+filter by e 
+create custom (users filter);
+angular.module('app').filter('Fil', Fil)
+
+function Fil(){
+    return function (input){
+        return modOutput;
+    }
+}
+
+New Topic
+Angularjs component
+model = appabgular js
+derective: do more 
+
+angularjs component: its compare derective with controlers, can say that angular js component its special down directive;
++ use component simple confir than directive 
++ optimath for component arhitectuar
++ simplisity to relocate 
+- when dont need use component
+- dont need use componet when need use directive for DOM manipulation in this situation best practise use 
+- when need to add option like praiorety
+-when directive need to dtar with atrebute
+
+Syntax create commponent:
+component like rule have name and oject component
+CDO:
+Couponent
+Definition
+object
+
+.componet('here-chang', CDO), 
+<here-chang>
+<>
+<>
