@@ -2,4 +2,12 @@ Here i will be explaine how to stir secure your application
 
 1.express-rate-limit//use avoid Ddos attack
 2 node.bcrypt.js//using Encript data in data base
-3 
+3 JWT token for autoryth
+4 JSONSchema validation
+5 escape html
+6 Mongoose
+7 eslint-plugin-security
+8 root user
+9 limit data sithe: node-rate-limiter-flexible / and for autorythe
+10 helmet
+11 audit
